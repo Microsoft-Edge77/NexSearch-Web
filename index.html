@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0d1117" />
+  <title>NexSearch</title>
+  <style>
+    :root {
+      --metro-accent: #6ea8fe;
+      --metro-accent-soft: rgba(110, 168, 254, 0.22);
+      --surface-0: #0f1117;
+      --surface-1: #171b23;
+      --surface-2: #1f2430;
+      --surface-3: #222938;
+      --text-1: #edf3ff;
+      --text-2: #c8d1e2;
+      --muted: #8ea3c7;
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 18px 44px rgba(0,0,0,0.28);
+      --radius: 24px;
+      --radius-sm: 16px;
+      --radius-lg: 30px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Segoe UI", Inter, Arial, sans-serif;
+      background: var(--surface-0);
+      color: var(--text-1);
+      scroll-behavior: smooth;
+    }
+    body {
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--metro-accent) 22%, transparent), transparent 36%),
+        radial-gradient(circle at bottom right, rgba(124, 97, 255, 0.12), transparent 28%),
+        var(--surface-0);
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+    img { max-width: 100%; display: block; }
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+    }
+    .sidebar {
+      width: 290px;
+      min-height: 100vh;
+      padding: 22px 18px;
+      border-right: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface-1) 94%, black);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(20px);
+    }
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 12px 18px;
+    }
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--metro-accent), color-mix(in srgb, var(--metro-accent) 70%, white));
+      color: #081925;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      box-shadow: var(--shadow);
+    }
+    .brand-block strong { display: block; font-size: 1.1rem; }
+    .brand-block small { color: var(--text-2); }
+
+    .side-section {
+      background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 12px;
+      margin-top: 18px;
+    }
+    .side-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-2);
+      font-size: .72rem;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      color: var(--text-1);
+    }
+    .chip-toggle {
+      width: 42px;
+      height: 30px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-1);
+      color: var(--text-1);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: .2s ease;
+    }
+    .chip-toggle.active {
+      background: linear-gradient(135deg, var(--metro-accent), color-mix(in srgb, var(--metro-accent) 70%, white));
+      color: #051824;
+    }
+    .accent-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .accent-swatch {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+    }
+    .accent-swatch.selected {
+      outline: 2px solid var(--text-1);
+      outline-offset: 2px;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .history-item {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      border-radius: 10px;
+      color: var(--text-1);
+      text-align: left;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .page-shell {
+      flex: 1;
+      padding: 26px 20px 32px;
+    }
+    .page {
+      width: min(1320px, 100%);
+      margin: 0 auto;
+    }
+    .hero {
+      padding: 8px 0 18px;
+    }
+    .eyebrow {
+      display: inline-block;
+      color: var(--metro-accent);
+      font-size: .8rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2.3rem, 3vw, 4rem);
+      line-height: 1.1;
+      letter-spacing: -.04em;
+    }
+
+    .searchbar {
+      position: relative;
+      max-width: 980px;
+      margin-top: 24px;
+    }
+    .searchbar__field {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 70px;
+      padding: 0 18px;
+      border-radius: 26px;
+      background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      transition: .2s ease;
+    }
+    .searchbar--focused .searchbar__field {
+      border-color: color-mix(in srgb, var(--metro-accent) 80%, white);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--metro-accent) 18%, transparent);
+    }
+    .searchbar__icon { color: var(--text-2); }
+    .searchbar__field input {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: none;
+      color: var(--text-1);
+      outline: none;
+      font-size: 1rem;
+    }
+    .searchbar__field input::placeholder { color: var(--text-2); }
+    .searchbar__submit {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--metro-accent), color-mix(in srgb, var(--metro-accent) 70%, white));
+      color: #06131d;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .searchbar__menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      right: 0;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface-2) 96%, transparent);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      z-index: 30;
+    }
+    .searchbar__item {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text-1);
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+    }
+    .searchbar__item:hover { background: rgba(255,255,255,0.04); }
+
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 16px;
+      margin-top: 22px;
+    }
+    .metro-tile {
+      min-height: 150px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 96%, transparent), rgba(255,255,255,0.02));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: transform .2s ease, box-shadow .2s ease;
+      cursor: pointer;
+    }
+    .metro-tile:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 46px rgba(0,0,0,0.34);
+    }
+    .metro-tile--accent {
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--metro-accent) 29%, transparent), transparent 40%),
+        linear-gradient(135deg, color-mix(in srgb, var(--surface-2) 92%, var(--metro-accent)), rgba(255,255,255,0.02));
+    }
+    .metro-tile__content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 18px 16px 14px;
+    }
+    .metro-tile__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-2);
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 10px;
+    }
+    .metro-tile--small { grid-column: span 2; min-height: 150px; }
+    .metro-tile--medium { grid-column: span 2; min-height: 200px; }
+    .metro-tile--large { grid-column: span 3; min-height: 200px; }
+    .metro-tile--xlarge { grid-column: span 4; min-height: 220px; }
+
+    .tile-stat, .tile-wallpaper, .tile-placeholder, .weather-inline {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+      height: 100%;
+      margin-top: 16px;
+      color: var(--text-1);
+    }
+    .tile-stat strong { font-size: 1.28rem; }
+    .weather-inline strong { font-size: clamp(1.7rem, 2vw, 2.5rem); }
+    .tile-wallpaper {
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border-radius: 18px;
+      border: 1px solid var(--border);
+    }
+    .home-summary {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      margin-top: 22px;
+    }
+    .panel {
+      background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+    }
+    .panel--accent {
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--metro-accent) 18%, transparent), transparent 40%),
+        color-mix(in srgb, var(--surface-2) 94%, transparent);
+    }
+    .suggestion-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .suggestion-chip {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-1);
+      border-radius: 999px;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+    .search-page { padding-top: 10px; }
+    .results-header { margin-bottom: 18px; }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+      color: var(--text-2);
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+    .tab--active {
+      color: #06131d;
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--metro-accent), color-mix(in srgb, var(--metro-accent) 70%, white));
+    }
+    .result-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.7fr);
+      gap: 20px;
+    }
+    .results-column, .side-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .results-summary {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--text-2);
+      font-size: .82rem;
+      margin-bottom: 4px;
+    }
+    .result-card {
+      background: color-mix(in srgb, var(--surface-2) 92%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+    }
+    .result-card__meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-2);
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+    .result-card__badge { color: var(--metro-accent) }
+    .result-card__title {
+      display: inline-block;
+      font-size: clamp(1.2rem, 2vw, 1.7rem);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+    .result-card__url {
+      color: var(--metro-accent);
+      font-size: .88rem;
+      margin-bottom: 8px;
+      word-break: break-all;
+    }
+    .result-card p {
+      margin: 0;
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+    .result-card__footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-2);
+      margin-top: 16px;
+    }
+
+    .ai-overview, .wiki-panel {
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--metro-accent) 15%, transparent), transparent 40%),
+        color-mix(in srgb, var(--surface-2) 90%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 18px 18px 16px;
+    }
+    .ai-overview__header, .wiki-panel__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--metro-accent);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: .8rem;
+      margin-bottom: 12px;
+    }
+    .ai-overview__content p { margin: 0; line-height: 1.7; }
+    .citation-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .citation-chip {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: .72rem;
+      color: var(--text-1);
+    }
+    .wiki-panel h3 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+    }
+    .wiki-panel p {
+      margin: 0;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+    .wiki-panel a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--metro-accent);
+    }
+
+    .image-mosaic {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .image-card {
+      position: relative;
+      display: block;
+      overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      min-height: 180px;
+      background: var(--surface-2);
+    }
+    .image-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .2s ease;
+    }
+    .image-card:hover img { transform: scale(1.03); }
+    .image-card__caption {
+      position: absolute;
+      inset: auto 0 0 0;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.66));
+      padding: 14px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .image-card__caption span { font-weight: 600; }
+    .image-card__caption small { color: rgba(255,255,255,0.82); }
+
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .news-card {
+      display: grid;
+      grid-template-columns: 160px minmax(0, 1fr);
+      gap: 16px;
+      background: color-mix(in srgb, var(--surface-2) 92%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      overflow: hidden;
+    }
+    .news-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .news-card__meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--text-2);
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .news-card h4 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+    }
+    .news-card p {
+      margin: 0;
+      color: var(--text-2);
+      line-height: 1.55;
+    }
+
+    .content-section {
+      margin-top: 26px;
+    }
+    .section-title {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-2);
+      font-size: .78rem;
+    }
+    .loading-panel {
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+      border-radius: 22px;
+      padding: 26px 20px;
+      color: var(--text-2);
+    }
+    .callout {
+      background: color-mix(in srgb, var(--surface-2) 92%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 18px 20px;
+    }
+    .callout p { margin: 0 0 10px; line-height: 1.8; }
+    .callout p:last-child { margin-bottom: 0; }
+
+    @media (max-width: 980px) {
+      .app-shell { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        min-height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .page-shell { padding-top: 10px; }
+      .result-layout { grid-template-columns: 1fr; }
+      .home-grid { grid-template-columns: repeat(4, minmax(120px,1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      .home-grid { grid-template-columns: repeat(2, minmax(140px,1fr)); }
+      .metro-tile--small, .metro-tile--medium, .metro-tile--large, .metro-tile--xlarge { grid-column: span 1; }
+      .image-mosaic, .news-grid { grid-template-columns: 1fr; }
+      .news-card { grid-template-columns: 1fr; }
+      .home-summary { grid-template-columns: 1fr; }
+      .searchbar__field { height: 62px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-mark">N</div>
+        <div>
+          <strong>NexSearch</strong>
+          <small>Metro Search</small>
+        </div>
+      </div>
+
+      <div class="side-section">
+        <div class="side-header">
+          <span>Paramètres</span>
+        </div>
+
+        <label class="toggle-row">
+          <span>Mode sombre</span>
+          <button id="themeToggle" type="button" class="chip-toggle active" aria-label="Basculer le thème">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12 7.5 7.5 0 0 1 12 2.5Z"/></svg>
+          </button>
+        </label>
+
+        <label class="toggle-row">
+          <span>Vue IA</span>
+          <button id="aiToggle" type="button" class="chip-toggle active" aria-label="Basculer l'aperçu IA">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5l2.18 5.67L20 9.35l-5.82 2.18L12 17.2l-2.18-5.67L4 9.35l5.82-2.18L12 1.5Zm7 12.5 1.09 2.91L21 17l-2.91 1.09L17 21l-1.09-2.91L13 17l2.91-1.09L17 13Zm-14 0 1.09 2.91L7 17l-2.91 1.09L3 21l-1.09-2.91L-1 17l2.91-1.09L3 13Z"/></svg>
+          </button>
+        </label>
+      </div>
+
+      <div class="side-section">
+        <div class="side-header"><span>Accent</span></div>
+        <div class="accent-grid" id="accentGrid"></div>
+      </div>
+
+      <div class="side-section">
+        <div class="side-header"><span>Historique</span></div>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </aside>
+
+    <main class="page-shell" id="app"></main>
+  </div>
+
+  <script>
+    const DEFAULT_ACCENTS = ['#6ea8fe', '#f5a623', '#4cd964', '#ff5ca8', '#7b61ff', '#5eead4'];
+    const STORAGE_KEY = 'nexsearch.settings';
+    const HISTORY_KEY = 'nexsearch.history';
+
+    const DEFAULT_PREFS = {
+      accent: '#6ea8fe',
+      theme: 'dark',
+      aiEnabled: true,
+      history: []
+    };
+
+    const readSettings = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : { ...DEFAULT_PREFS };
+      } catch {
+        return { ...DEFAULT_PREFS };
+      }
+    };
+
+    const saveSettings = (prefs) => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+    };
+
+    const readHistory = () => {
+      try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const writeHistory = (list) => {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    };
+
+    function normalizeQuery(value) {
+      return (value || '').trim().replace(/\\s+/g, ' ');
+    }
+
+    function buildSearchHash(query, type = 'web') {
+      return '#/search?q=' + encodeURIComponent(query) + '&type=' + type;
+    }
+
+    function parseHashSearch() {
+      const hash = location.hash.replace(/^#/, '');
+      const raw = hash.startsWith('/') ? hash.slice(1) : hash;
+      const params = new URLSearchParams(raw);
+      const q = params.get('q') || '';
+      const t = params.get('type') || 'web';
+      return {
+        q: q,
+        type: ['web', 'images', 'news'].includes(t) ? t : 'web'
+      };
+    }
+
+    function domainFromUrl(url) {
+      try {
+        return new URL(url).hostname.replace(/^www\\./, '');
+      } catch {
+        return 'nexsearch.local';
+      }
+    }
+
+    function fetchSuggestions(query) {
+      return fetch('https://duckduckgo.com/ac/?q=' + encodeURIComponent(query) + '&kl=fr-fr')
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          const items = Array.isArray(data) ? data : [];
+          return items
+            .map(x => x.phrase || x.text || '')
+            .filter(Boolean)
+            .slice(0, 6);
+        })
+        .catch(() => [
+          query + ' météo',
+          query + ' actualités',
+          query + ' images',
+          query + ' wikipedia'
+        ]);
+    }
+
+    function fallbackResults(query) {
+      const safe = query || 'nexsearch';
+      return [
+        {
+          title: 'Résultat principal pour “' + safe + '”',
+          url: 'https://fr.wikipedia.org/wiki/' + encodeURIComponent(safe),
+          domain: 'wikipedia.org',
+          description: 'Une vue synthétique de ' + safe + ', avec contexte, usages et informations de référence.'
+        },
+        {
+          title: 'Guide complet • ' + safe,
+          url: 'https://fr.wikipedia.org/wiki/Recherche',
+          domain: 'fr.wikipedia.org',
+          description: 'Description encyclopédique et sources publiques autour de ' + safe + '.'
+        },
+        {
+          title: 'Actualités sur ' + safe,
+          url: 'https://www.lemonde.fr/',
+          domain: 'lemonde.fr',
+          description: 'Les derniers articles, analyses et tendances sur ' + safe + '.'
+        }
+      ];
+    }
+
+    function fallbackImages(query) {
+      const safe = query || 'nexsearch';
+      return [
+        { title: safe + ' visuel 1', url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3', source: 'Unsplash', thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80' },
+        { title: safe + ' visuel 2', url: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e', source: 'Unsplash', thumbnail: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=900&q=80' },
+        { title: safe + ' visuel 3', url: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee', source: 'Unsplash', thumbnail: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80' }
+      ];
+    }
+
+    function fallbackNews(query) {
+      const safe = query || 'nexsearch';
+      return [
+        {
+          title: 'Évolution de ' + safe + ' : tendances à surveiller',
+          url: 'https://www.lemonde.fr/',
+          source: 'Le Monde',
+          summary: 'Les médias publics décrivent un intérêt croissant pour ' + safe + '.',
+          date: 'Il y a 2 heures'
+        },
+        {
+          title: 'Analyse • ' + safe + ' dans le contexte actuel',
+          url: 'https://www.reuters.com/',
+          source: 'Reuters',
+          summary: 'Les dernières observations et commentaires autour de ' + safe + '.',
+          date: 'Il y a 5 heures'
+        }
+      ];
+    }
+
+    async function fetchWikipediaSummary(query) {
+      try {
+        const r = await fetch('https://fr.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(query));
+        if (!r.ok) return undefined;
+        const data = await r.json();
+        if (!data || !data.extract) return undefined;
+        return {
+          title: data.title || query,
+          summary: data.extract || 'Résumé de ' + query + '.',
+          url: data.content_urls?.desktop?.page || 'https://fr.wikipedia.org/wiki/' + encodeURIComponent(query)
+        };
+      } catch {
+        return undefined;
+      }
+    }
+
+    async function fetchSearchData(query, type = 'web') {
+      const q = normalizeQuery(query) || 'nexsearch';
+      const results = fallbackResults(q);
+      const news = fallbackNews(q);
+      const images = fallbackImages(q);
+      const wiki = await fetchWikipediaSummary(q);
+
+      const aiOverview = [
+        JSON.stringify(['Wikipedia', 'Sources publiques', 'Moteur de recherche']),
+        '',
+        '**Synthèse**',
+        '',
+        'Le sujet “' + q + '” est abordé dans plusieurs références publiques. Les informations les plus fiables convergent vers une compréhension claire, concise et accessible.',
+        '',
+        '- Les éléments utiles sont présentés dans un contexte lisible.',
+        '- Les sources récentes restent prioritaires.',
+        '- Les résultats sont adaptés à une lecture francophone.',
+        '',
+        'Pour aller plus loin, consultez [1], [2], [3], [4].'
+      ].join('\\n');
+
+      return {
+        query: q,
+        type,
+        results: results.map((item, index) => ({
+          ...item,
+          domain: domainFromUrl(item.url),
+          date: ['Aujourd’hui', 'Hier', 'Il y a 2 jours'][index % 3]
+        })),
+        images,
+        news,
+        aiOverview,
+        citations: ['Wikipedia', 'Sources publiques', 'Actualités', 'Données publiques'],
+        wikipedia: wiki
+      };
+    }
+
+    function fetchWeather() {
+      if (!('geolocation' in navigator)) {
+        return Promise.resolve({
+          temperature: 22,
+          condition: 'Ensoleillé',
+          humidity: 54,
+          wind: 10,
+          icon: '☀️',
+          feelsLike: 23,
+          location: 'Localisation actuelle'
+        });
+      }
+
+      return new Promise(resolve => {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const { latitude, longitude } = pos.coords;
+            try {
+              const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto&forecast_days=1`);
+              if (!r.ok) throw new Error(' météo indisponible');
+              const data = await r.json();
+              const current = data.current || {};
+              const code = Number(current.weather_code || 0);
+              const mapCondition = (num) => {
+                if ([0,1,2].includes(num)) return 'Ensoleillé';
+                if ([3,45,48].includes(num)) return 'Nuageux';
+                if ([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(num)) return 'Pluie';
+                if ([71,73,75,77,85,86].includes(num)) return 'Neige';
+                if ([95,96,99].includes(num)) return 'Orage';
+                return 'Météo';
+              };
+              resolve({
+                temperature: Number(current.temperature_2m ?? 20),
+                condition: mapCondition(code),
+                humidity: Number(current.relative_humidity_2m ?? 55),
+                wind: Number(current.wind_speed_10m ?? 12),
+                icon: '☀️',
+                feelsLike: Number(current.apparent_temperature ?? 21),
+                location: 'Localisation actuelle'
+              });
+            } catch {
+              resolve({
+                temperature: 22,
+                condition: 'Ensoleillé',
+                humidity: 54,
+                wind: 10,
+                icon: '☀️',
+                feelsLike: 23,
+                location: 'Localisation actuelle'
+              });
+            }
+          },
+          () => {
+            resolve({
+              temperature: 22,
+              condition: 'Ensoleillé',
+              humidity: 54,
+              wind: 10,
+              icon: '☀️',
+              feelsLike: 23,
+              location: 'Localisation actuelle'
+            });
+          }
+        );
+      });
+    }
+
+    function renderHome() {
+      const prefs = readSettings();
+      const app = document.getElementById('app');
+      const query = '';
+      const history = prefs.history || [];
+
+      app.innerHTML = `
+        <div class="page home-page">
+          <header class="hero">
+            <div class="hero__title-wrap">
+              <span class="eyebrow">NexSearch</span>
+              <h1>Votre moteur de recherche visuel</h1>
+            </div>
+
+            <div class="searchbar" id="searchbarHost"></div>
+          </header>
+
+          <section class="tile-grid home-grid">
+            <article class="metro-tile metro-tile--medium metro-tile--accent" data-go="weather">
+              <div class="metro-tile__content">
+                <div class="metro-tile__header">
+                  <span>Météo</span>
+                  <span>Local</span>
+                </div>
+                <div id="weatherTile" class="weather-inline">
+                  <strong>--°C</strong>
+                  <span>Chargement…</span>
+                  <small>-- % · -- km/h</small>
+                </div>
+              </div>
+            </article>
+
+            <article class="metro-tile metro-tile--small" data-go="clock">
+              <div class="metro-tile__content">
+                <div class="metro-tile__header">
+                  <span>Horloge</span>
+                  <span>Heure</span>
+                </div>
+                <div class="tile-stat">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5h-2v6l5 3 1-1.73-4-2.27Z"/></svg>
+                  <strong id="clockLabel">--:--</strong>
+                </div>
+              </div>
+            </article>
+
+            <article class="metro-tile metro-tile--large" data-go="wallpaper">
+              <div class="metro-tile__content">
+                <div class="metro-tile__header">
+                  <span>Wallpaper</span>
+                  <span>Daily</span>
+                </div>
+                <div class="tile-wallpaper">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 12H5V7h14Zm-3.5-7.5-2.5 3.2-1.5-1.8-3.5 4.6h11Z"/></svg>
+                  <span>Image du jour</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="metro-tile metro-tile--medium" data-go="news">
+              <div class="metro-tile__content">
+                <div class="metro-tile__header">
+                  <span>Actualités</span>
+                  <span>Live</span>
+                </div>
+                <div class="tile-stat">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 3v-3H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm2 3v2h12V7H6Zm0 4v2h8v-2H6Z"/></svg>
+                  <strong id=\"newsCount\">2</strong>
+                </div>
+              </div>
+            </article>
+
+            <article class="metro-tile metro-tile--small" data-go="explore">
+              <div class="metro-tile__content">
+                <div class="metro-tile__header">
+                  <span>Explorer</span>
+                  <span>Découvrir</span>
+                </div>
+                <div class="tile-stat">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm3.5 6.5L13 14l-5.5 3.5L9 12l5.5-3.5Z"/></svg>
+                  <strong>Live</strong>
+                </div>
+              </div>
+            </article>
+
+            <article class="metro-tile metro-tile--small" data-go="history">
+              <div class="metro-tile__content">
+                <div class="metro-tile__header">
+                  <span>Historique</span>
+                  <span>Récent</span>
+                </div>
+                <div class="tile-stat">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 3a9 9 0 0 1 8 8h-2a7 7 0 1 0-7 7v2A9 9 0 0 1 13 3Zm1 5v5l4 2-1 1.73-5-2.9V8Z"/></svg>
+                  <strong id=\"historyCount\">0</strong>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section class="home-summary">
+            <div class="panel">
+              <h2>À l’instant</h2>
+              <p>La plateforme réunit météo locale, actualités, tendances visuelles et résultats synthétiques pour offrir une expérience de recherche moderne et lisible.</p>
+            </div>
+
+            <div class="panel panel--accent">
+              <h3>Suggestions</h3>
+              <div class="suggestion-chips">
+                <button class="suggestion-chip" type="button" data-query="Météo Paris">Météo Paris</button>
+                <button class="suggestion-chip" type="button" data-query="Actualités tech">Actualités tech</button>
+                <button class="suggestion-chip" type="button" data-query="Images paysage">Images paysage</button>
+                <button class="suggestion-chip" type="button" data-query="Wikipedia">Wikipedia</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      `;
+
+      const searchHost = document.getElementById('searchbarHost');
+      const input = document.createElement('div');
+      input.innerHTML = `
+        <div class="searchbar" id="quickSearch">
+          <div class="searchbar__field">
+            <svg class="searchbar__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 5 5"></path></svg>
+            <input id="mainSearchInput" type="text" placeholder="Rechercher dans le web, les images, l’actualité…" />
+            <button class="searchbar__submit" id="mainSearchSubmit" type="button" aria-label="Rechercher">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 5l7 7-7 7"></path></svg>
+            </button>
+          </div>
+          <div id="suggestionsBox" class="searchbar__menu" hidden></div>
+        </div>
+      `;
+      searchHost.appendChild(input);
+
+      const mainSearchInput = document.getElementById('mainSearchInput');
+      const suggestionsBox = document.getElementById('suggestionsBox');
+      const doSearch = (value) => {
+        const q = normalizeQuery(value);
+        if (!q) return;
+        const prefs2 = readSettings();
+        const nextHistory = [q, ...((prefs2.history || []).filter(i => i !== q))].slice(0, 8);
+        prefs2.history = nextHistory;
+        saveSettings(prefs2);
+        location.hash = buildSearchHash(q, 'web');
+      };
+
+      mainSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') doSearch(mainSearchInput.value);
+      });
+      document.getElementById('mainSearchSubmit').addEventListener('click', () => doSearch(mainSearchInput.value));
+
+      mainSearchInput.addEventListener('focus', async () => {
+        const q = normalizeQuery(mainSearchInput.value);
+        if (!q) {
+          suggestionsBox.hidden = true;
+          return;
+        }
+        const items = await fetchSuggestions(q);
+        renderSuggestions(items, doSearch, suggestionsBox, mainSearchInput);
+        suggestionsBox.hidden = false;
+      });
+
+      mainSearchInput.addEventListener('input', async () => {
+        const q = normalizeQuery(mainSearchInput.value);
+        if (!q) {
+          suggestionsBox.hidden = true;
+          return;
+        }
+        const items = await fetchSuggestions(q);
+        renderSuggestions(items, doSearch, suggestionsBox, mainSearchInput);
+        suggestionsBox.hidden = false;
+      });
+
+      document.querySelectorAll('.suggestion-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const q = btn.getAttribute('data-query');
+          doSearch(q);
+        });
+      });
+
+      document.querySelectorAll('[data-go]').forEach(tile => {
+        tile.addEventListener('click', () => {
+          const go = tile.getAttribute('data-go');
+          if (go === 'weather') doSearch('météo');
+          if (go === 'news') doSearch('actualités');
+          if (go === 'explore') doSearch('explorer');
+          if (go === 'history') doSearch('historique');
+          if (go === 'wallpaper') doSearch('fond d’écran');
+          if (go === 'clock') doSearch('heure locale');
+        });
+      });
+
+      fetchWeather().then(w => {
+        const el = document.getElementById('weatherTile');
+        if (!el) return;
+        el.innerHTML = `
+          <strong>${Math.round(w.temperature)}°C</strong>
+          <span>${w.condition}</span>
+          <small>${w.humidity}% · ${w.wind} km/h</small>
+        `;
+      });
+
+      const timeEl = document.getElementById('clockLabel');
+      const updateClock = () => {
+        const now = new Date();
+        timeEl.textContent = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      };
+      updateClock();
+      setInterval(updateClock, 30000);
+
+      const historyCount = document.getElementById('historyCount');
+      historyCount.textContent = String(history.length);
+
+      const newsCount = document.getElementById('newsCount');
+      newsCount.textContent = String(Math.max(2, history.length || 2));
+
+      const hist = document.getElementById('historyList');
+      const histItems = history.slice(0, 8);
+      hist.innerHTML = histItems.length
+        ? histItems.map(item => `<button class=\"history-item\" type=\"button\" data-search-item=\"${item}\">${item}</button>`).join('')
+        : '<p style=\"margin:0;color:var(--text-2)\">Aucune recherche récente.</p>';
+
+      hist.querySelectorAll('[data-search-item]').forEach(btn => {
+        btn.addEventListener('click', () => doSearch(btn.getAttribute('data-search-item')));
+      });
+    }
+
+    function renderSuggestions(items, doSearch, box, input) {
+      const list = items.slice(0, 6);
+      if (!list.length) {
+        box.hidden = true;
+        return;
+      }
+      box.innerHTML = list.map(item => `
+        <button class="searchbar__item" type="button" data-suggest="${item}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="9"></circle></svg>
+          <span>${item}</span>
+        </button>
+      `).join('');
+      box.hidden = false;
+      box.querySelectorAll('[data-suggest]').forEach(btn => {
+        btn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          const v = btn.getAttribute('data-suggest');
+          input.value = v;
+          doSearch(v);
+        });
+      });
+    }
+
+    function renderResultCard(item, index) {
+      return `
+        <article class="result-card">
+          <div class="result-card__meta">
+            <span class="result-card__badge">[${index + 1}]</span>
+            <span>${item.domain}</span>
+          </div>
+          <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="result-card__title">${item.title}</a>
+          <div class="result-card__url">${item.url}</div>
+          <p>${item.description}</p>
+          <div class="result-card__footer">
+            <span>${item.date || 'Aujourd’hui'}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderImageCard(item) {
+      return `
+        <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="image-card">
+          <img src="${item.thumbnail}" alt="${item.title}" />
+          <div class="image-card__caption">
+            <span>${item.title}</span>
+            <small>${item.source}</small>
+          </div>
+        </a>
+      `;
+    }
+
+    function renderNewsCard(item) {
+      return `
+        <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="news-card">
+          ${item.image ? `<img src="${item.image}" alt="${item.title}" />` : ''}
+          <div>
+            <div class="news-card__meta">
+              <span>${item.source}</span>
+              <span>${item.date}</span>
+            </div>
+            <h4>${item.title}</h4>
+            <p>${item.summary}</p>
+          </div>
+        </a>
+      `;
+    }
+
+    function renderSearchPage() {
+      const { q, type } = parseHashSearch();
+      const prefs = readSettings();
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="page search-page">
+          <header class="results-header">
+            <div class="searchbar" id="searchbarHost2"></div>
+          </header>
+
+          <nav class="tabs" aria-label="Pivots de recherche">
+            <button class="tab ${type === 'web' ? 'tab--active' : ''}" type="button" data-tab="web">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 5 5"></path></svg>
+              Web
+            </button>
+            <button class="tab ${type === 'images' ? 'tab--active' : ''}" type="button" data-tab="images">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="2.5"></circle><path d="M21 15l-5-5-7 7"></path></svg>
+              Images
+            </button>
+            <button class="tab ${type === 'news' ? 'tab--active' : ''}" type="button" data-tab="news">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm2 3h12v2H6V8Zm0 4h8v2H6v-2Z"></path></svg>
+              Actualités
+            </button>
+          </nav>
+
+          <div id="searchContent">
+            <div class="loading-panel">Chargement des résultats…</div>
+          </div>
+        </div>
+      `;
+
+      const searchHost2 = document.getElementById('searchbarHost2');
+      const inputMarkup = `
+        <div class="searchbar" id="searchDynamic">
+          <div class="searchbar__field">
+            <svg class="searchbar__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 5 5"></path></svg>
+            <input id="searchInput2" type="text" value="${q}" placeholder="Rechercher…" />
+            <button class="searchbar__submit" id="searchSubmit2" type="button" aria-label="Rechercher">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 5l7 7-7 7"></path></svg>
+            </button>
+          </div>
+          <div id="ddSuggestions" class="searchbar__menu" hidden></div>
+        </div>
+      `;
+      searchHost2.innerHTML = inputMarkup;
+
+      const input2 = document.getElementById('searchInput2');
+      const ddSuggestions = document.getElementById('ddSuggestions');
+      const doSearch2 = (value) => {
+        const q2 = normalizeQuery(value);
+        if (!q2) return;
+        const nextHistory = [q2, ...((prefs.history || []).filter(i => i !== q2))].slice(0, 8);
+        prefs.history = nextHistory;
+        saveSettings(prefs);
+        location.hash = buildSearchHash(q2, type || 'web');
+      };
+
+      input2.addEventListener('input', async () => {
+        const s = normalizeQuery(input2.value);
+        if (!s) { ddSuggestions.hidden = true; return; }
+        const items = await fetchSuggestions(s);
+        renderSuggestions(items, doSearch2, ddSuggestions, input2);
+      });
+
+      input2.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') doSearch2(input2.value);
+      });
+      document.getElementById('searchSubmit2').addEventListener('click', () => doSearch2(input2.value));
+
+      document.querySelectorAll('[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabType = btn.getAttribute('data-tab');
+          location.hash = buildSearchHash(q || 'nexsearch', tabType);
+        });
+      });
+
+      fetchSearchData(q || 'nexsearch', type).then(data => {
+        const body = document.getElementById('searchContent');
+        if (!body) return;
+
+        if (type === 'images') {
+          body.innerHTML = `
+            <section class="content-section">
+              <div class="section-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="2.5"></circle><path d="M21 15l-5-5-7 7"></path></svg>
+                <span>Images</span>
+              </div>
+              <div class="image-mosaic">${data.images.map(renderImageCard).join('')}</div>
+            </section>
+          `;
+          return;
+        }
+
+        if (type === 'news') {
+          body.innerHTML = `
+            <section class="content-section">
+              <div class="section-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm2 3h12v2H6V8Zm0 4h8v2H6v-2Z"></path></svg>
+                <span>Actualités</span>
+              </div>
+              <div class="news-grid">${data.news.map(renderNewsCard).join('')}</div>
+            </section>
+          `;
+          return;
+        }
+
+        const layout = `
+          <div class="result-layout">
+            <section class="results-column">
+              <div class="results-summary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="9"></circle></svg>
+                <span>Résultats pour “${data.query}”</span>
+              </div>
+              ${data.results.map(renderResultCard).join('')}
+            </section>
+
+            <aside class="side-column">
+              ${prefs.aiEnabled ? `
+                <section class="ai-overview">
+                  <div class="ai-overview__header">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5l2.18 5.67L20 9.35l-5.82 2.18L12 17.2l-2.18-5.67L4 9.35l5.82-2.18L12 1.5Zm7 12.5 1.09 2.91L21 17l-2.91 1.09L17 21l-1.09-2.91L13 17l2.91-1.09L17 13Zm-14 0 1.09 2.91L7 17l-2.91 1.09L3 21l-1.09-2.91L-1 17l2.91-1.09L3 13Z"/></svg>
+                    <span>Aperçu IA</span>
+                  </div>
+                  <div class="ai-overview__content">
+                    ${data.aiOverview.split('\\n').map(line => line.startsWith('**') || line.startsWith('-') || line.startsWith('Pour aller plus loin') || line.startsWith('Le sujet') || line.startsWith('JSON') ? `<p>${line}</p>` : `<p>${line}</p>`).join('')}
+                  </div>
+                  <div class="citation-list">
+                    ${data.citations.map((c, i) => `<span class=\"citation-chip\">[${i+1}] ${c}</span>`).join('')}
+                  </div>
+                </section>
+              ` : ''}
+              ${data.wikipedia ? `
+                <aside class="wiki-panel">
+                  <div class="wiki-panel__header">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Zm0 0V20"></path></svg>
+                    <span>Wikipedia</span>
+                  </div>
+                  <h3>${data.wikipedia.title}</h3>
+                  <p>${data.wikipedia.summary}</p>
+                  <a href="${data.wikipedia.url}" target="_blank" rel="noopener noreferrer">Lire la fiche</a>
+                </aside>
+              ` : ''}
+            </aside>
+          </div>
+        `;
+
+        body.innerHTML = layout;
+      });
+    }
+
+    function applyThemeAndAccent() {
+      const prefs = readSettings();
+      const root = document.documentElement;
+
+      root.style.setProperty('--metro-accent', prefs.accent || '#6ea8fe');
+      root.style.setProperty('--metro-accent-soft', (prefs.accent || '#6ea8fe') + '22');
+      root.style.setProperty('--surface-0', prefs.theme === 'dark' ? '#0f1117' : '#edf3ff');
+      root.style.setProperty('--surface-1', prefs.theme === 'dark' ? '#171b23' : '#f7f9ff');
+      root.style.setProperty('--surface-2', prefs.theme === 'dark' ? '#1f2430' : '#ffffff');
+      root.style.setProperty('--text-1', prefs.theme === 'dark' ? '#edf3ff' : '#101826');
+      root.style.setProperty('--text-2', prefs.theme === 'dark' ? '#c8d1e2' : '#42506b');
+      root.style.setProperty('--border', prefs.theme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(15,25,46,0.08)');
+    }
+
+    function renderAccentSelector() {
+      const prefs = readSettings();
+      const grid = document.getElementById('accentGrid');
+      if (!grid) return;
+      grid.innerHTML = DEFAULT_ACCENTS.map(color => `
+        <button type="button" class="accent-swatch ${prefs.accent === color ? 'selected' : ''}" style="background: linear-gradient(135deg, ${color}, rgba(255,255,255,0.18));" data-accent="${color}" aria-label="Choisir la couleur ${color}"></button>
+      `).join('');
+
+      grid.querySelectorAll('[data-accent]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const next = readSettings();
+          next.accent = btn.getAttribute('data-accent');
+          saveSettings(next);
+          applyThemeAndAccent();
+          renderAccentSelector();
+          renderSidebarHistory();
+        });
+      });
+    }
+
+    function renderSidebarHistory() {
+      const prefs = readSettings();
+      const list = document.getElementById('historyList');
+      if (!list) return;
+      const items = (prefs.history || []).slice(0, 8);
+      list.innerHTML = items.length
+        ? items.map(item => `<button class="history-item" type="button" data-history-item="${item}">${item}</button>`).join('')
+        : '<p style="margin:0;color:var(--text-2)">Aucune recherche récente.</p>';
+
+      list.querySelectorAll('[data-history-item]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const value = btn.getAttribute('data-history-item');
+          location.hash = buildSearchHash(value, 'web');
+        });
+      });
+    }
+
+    function bindSidebarControls() {
+      const prefs = readSettings();
+
+      const themeBtn = document.getElementById('themeToggle');
+      if (themeBtn) {
+        themeBtn.classList.toggle('active', prefs.theme === 'dark');
+        themeBtn.addEventListener('click', () => {
+          const next = readSettings();
+          next.theme = next.theme === 'dark' ? 'light' : 'dark';
+          saveSettings(next);
+          applyThemeAndAccent();
+          bindSidebarControls();
+        });
+      }
+
+      const aiBtn = document.getElementById('aiToggle');
+      if (aiBtn) {
+        aiBtn.classList.toggle('active', !!prefs.aiEnabled);
+        aiBtn.addEventListener('click', () => {
+          const next = readSettings();
+          next.aiEnabled = !next.aiEnabled;
+          saveSettings(next);
+          bindSidebarControls();
+          const hash = location.hash;
+          if (hash.includes('/search')) renderSearchPage();
+        });
+      }
+    }
+
+    function route() {
+      applyThemeAndAccent();
+      renderAccentSelector();
+      renderSidebarHistory();
+      bindSidebarControls();
+
+      const hash = location.hash || '#/';
+      if (hash.startsWith('#/search')) {
+        renderSearchPage();
+      } else {
+        renderHome();
+      }
+    }
+
+    window.addEventListener('hashchange', route);
+    window.addEventListener('DOMContentLoaded', route);
+  </script>
+</body>
+</html>
